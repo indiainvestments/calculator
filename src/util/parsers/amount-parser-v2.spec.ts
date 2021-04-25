@@ -26,7 +26,7 @@ test("Comma separated values v2", () => {
   expect(evaluateExpression("12,123 ** 3")).toEqual(12123 ** 3);
 });
 
-test.only("Works with k/K", () => {
+test("Works with k/K", () => {
   expect(evaluateExpression("1.2k + 1,35,000 + 2 ** 12 + 1.5 L")).toEqual(
     1200 + 135000 + 2 ** 12 + 1.5 * 100000
   );
