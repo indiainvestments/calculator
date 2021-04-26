@@ -15,6 +15,9 @@ export enum ExpressionToken {
   EOF,
 }
 
+const pureNumberRegExp = /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/;
+const scalingFactorTokens = ["%", "k", "l"];
+
 const lexer = new pz.Lexer<ExpressionToken>(
   [
     /-?\d+(?:,\d{2,3})*(?:\.\d+)?(?:[eE][+-]?\d+)?(?:[ ]?[%|k|K|l|L])?/,
@@ -44,28 +47,21 @@ const number = pz
       (acc, digit) => (digit === "," ? acc : acc + digit),
       ""
     );
-    if (numberWithoutComma.toLowerCase().endsWith("%")) {
-      const numberWithoutCommaWithoutScaling = numberWithoutComma.match(
-        /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/
-      );
-      if (numberWithoutCommaWithoutScaling) {
-        return Number(numberWithoutCommaWithoutScaling[0]) / 100;
-      }
-    }
-    if (numberWithoutComma.toLowerCase().endsWith("k")) {
-      const numberWithoutCommaWithoutScaling = numberWithoutComma.match(
-        /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/
-      );
-      if (numberWithoutCommaWithoutScaling) {
-        return Number(numberWithoutCommaWithoutScaling[0]) * 1000;
-      }
-    }
-    if (numberWithoutComma.toLowerCase().endsWith("l")) {
-      const numberWithoutCommaWithoutScaling = numberWithoutComma.match(
-        /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/
-      );
-      if (numberWithoutCommaWithoutScaling) {
-        return Number(numberWithoutCommaWithoutScaling[0]) * 100000;
+    for (let i = 0; i < scalingFactorTokens.length; i++) {
+      if (numberWithoutComma.toLowerCase().endsWith(scalingFactorTokens[i])) {
+        const numberWithoutCommaWithoutScaling = numberWithoutComma.match(
+          pureNumberRegExp
+        );
+        if (numberWithoutCommaWithoutScaling) {
+          switch (scalingFactorTokens[i]) {
+            case "%":
+              return Number(numberWithoutCommaWithoutScaling[0]) / 100;
+            case "k":
+              return Number(numberWithoutCommaWithoutScaling[0]) * 1000;
+            case "l":
+              return Number(numberWithoutCommaWithoutScaling[0]) * 100000;
+          }
+        }
       }
     }
     return Number(numberWithoutComma);
