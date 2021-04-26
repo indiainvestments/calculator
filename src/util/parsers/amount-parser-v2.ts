@@ -11,24 +11,21 @@ export enum ExpressionToken {
   Multiply,
   Divide,
   Power,
-  ScaleBy1000x,
-  ScaleBy100000x,
-  ScaleBy10000000x,
   Whitespace,
   EOF,
 }
 
 const lexer = new pz.Lexer<ExpressionToken>(
   [
-    /-?\d+(?:,\d{2,3})*(?:\.\d+)?(?:[eE][+-]?\d+)?(?:[ ]?[k|K|l|L])?/,
+    /-?\d+(?:,\d{2,3})*(?:\.\d+)?(?:[eE][+-]?\d+)?(?:[ ]?[%|k|K|l|L])?/,
     ExpressionToken.Number,
   ],
   [/\(/, ExpressionToken.OpenParen],
   [/\)/, ExpressionToken.CloseParen],
   [/\+/, ExpressionToken.Plus],
   [/-/, ExpressionToken.Minus],
-  [/(\*{2})/, ExpressionToken.Power], // ** for to the power
-  [/(\*{1})/, ExpressionToken.Multiply],
+  [/(\*{2})|\^/, ExpressionToken.Power], // ** for to the power
+  [/(\*{1})|x/, ExpressionToken.Multiply],
   [/\//, ExpressionToken.Divide],
   [/[\t\n\r ]+/, ExpressionToken.Whitespace]
 );
@@ -47,6 +44,14 @@ const number = pz
       (acc, digit) => (digit === "," ? acc : acc + digit),
       ""
     );
+    if (numberWithoutComma.toLowerCase().endsWith("%")) {
+      const numberWithoutCommaWithoutScaling = numberWithoutComma.match(
+        /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/
+      );
+      if (numberWithoutCommaWithoutScaling) {
+        return Number(numberWithoutCommaWithoutScaling[0]) / 100;
+      }
+    }
     if (numberWithoutComma.toLowerCase().endsWith("k")) {
       const numberWithoutCommaWithoutScaling = numberWithoutComma.match(
         /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/
